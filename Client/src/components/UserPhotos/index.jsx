@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Typography, Card, CardHeader, CardMedia, CardContent, Divider, List, ListItem, ListItemText } from "@mui/material";
+import { Typography, Card, CardHeader, CardMedia, CardContent, Divider, List, ListItem, ListItemText, TextField, Button, Box } from "@mui/material";
 import { Link, useParams } from "react-router-dom";
 
 import "./styles.css";
@@ -11,14 +11,41 @@ import fetchModel from "../../lib/fetchModelData";
 function UserPhotos () {
     const { userId } = useParams();
     const [photos, setPhotos] = useState(null);
+    const [commentTexts, setCommentTexts] = useState({});
 
-    useEffect(() => {
+    const loadPhotos = () => {
         fetchModel(`/photosOfUser/${userId}`)
             .then((data) => {
                 setPhotos(data);
             })
             .catch((err) => console.log(err));
+    };
+
+    useEffect(() => {
+        loadPhotos();
     }, [userId]);
+
+    const handleCommentChange = (photoId, text) => {
+        setCommentTexts(prev => ({ ...prev, [photoId]: text }));
+    };
+
+    const handleCommentSubmit = async (photoId) => {
+        const text = commentTexts[photoId];
+        if (!text || text.trim() === "") return;
+
+        try {
+            await fetchModel(`/commentsOfPhoto/${photoId}`, {
+                method: "POST",
+                body: JSON.stringify({ comment: text })
+            });
+            // Tải lại danh sách ảnh để thấy comment mới
+            loadPhotos();
+            // Xoá nội dung ô input
+            setCommentTexts(prev => ({ ...prev, [photoId]: "" }));
+        } catch (err) {
+            alert(err.message);
+        }
+    };
 
     if (!photos) {
         return <Typography>Loading photos...</Typography>;
@@ -34,11 +61,11 @@ function UserPhotos () {
             <Card key={photo._id} sx={{ marginBottom: 4 }}>
                 <CardHeader 
                   title={`Post Settings`} 
-                  subheader={photo.date_time} 
+                  subheader={new Date(photo.date_time).toLocaleString()} 
                 />
                 <CardMedia
                     component="img"
-                    image={require(`../../images/${photo.file_name}`)}
+                    image={`http://localhost:8081/images/${photo.file_name}`}
                     alt={photo.file_name}
                 />
                 <CardContent>
@@ -57,7 +84,7 @@ function UserPhotos () {
                                             secondary={
                                                 <React.Fragment>
                                                     <Typography component="span" variant="caption" color="textSecondary" display="block">
-                                                        {comment.date_time}
+                                                        {new Date(comment.date_time).toLocaleString()}
                                                     </Typography>
                                                     <Typography component="span" variant="body2" color="textPrimary">
                                                         {comment.comment}
@@ -73,6 +100,32 @@ function UserPhotos () {
                     ) : (
                         <Typography variant="body2" color="textSecondary">No comments yet.</Typography>
                     )}
+
+                    {/* Khung nhập bình luận mới */}
+                    <Box display="flex" gap={2} mt={2}>
+                        <TextField
+                            size="small"
+                            fullWidth
+                            variant="outlined"
+                            placeholder="Add a comment..."
+                            value={commentTexts[photo._id] || ""}
+                            onChange={(e) => handleCommentChange(photo._id, e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleCommentSubmit(photo._id);
+                                }
+                            }}
+                        />
+                        <Button 
+                            variant="contained" 
+                            color="primary" 
+                            onClick={() => handleCommentSubmit(photo._id)}
+                            disabled={!commentTexts[photo._id]?.trim()}
+                        >
+                            Post
+                        </Button>
+                    </Box>
                 </CardContent>
             </Card>
         ))}
