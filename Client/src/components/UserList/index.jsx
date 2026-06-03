@@ -14,33 +14,35 @@ import fetchModel from "../../lib/fetchModelData";
 /**
  * Define UserList, a React component of Project 4.
  */
-function UserList () {
-    const [users, setUsers] = useState(null);
+function UserList() {
+  const [users, setUsers] = useState(null);
 
-    useEffect(() => {
-        fetchModel("/user/list").then((data) => {
-            setUsers(data);
-        });
-    }, []);
+  useEffect(() => {
+    fetchModel("/user/list").then((data) => {
+      setUsers(data);
+    }).catch((err) => {
+      console.error("Failed to load users:", err);
+    });
+  }, []);
 
-    if (!users) {
-        return <Typography variant="body1">Loading user list...</Typography>;
-    }
+  if (!users) {
+    return <Typography variant="body1">Loading user list...</Typography>;
+  }
 
-    return (
-      <div>
-        <List component="nav">
-          {users.map((item) => (
-            <React.Fragment key={item._id}>
-              <ListItem button component={Link} to={`/users/${item._id}`}>
-                <ListItemText primary={`${item.first_name} ${item.last_name}`} />
-              </ListItem>
-              <Divider />
-            </React.Fragment>
-          ))}
-        </List>
-      </div>
-    );
+  return (
+    <div>
+      <List component="nav">
+        {users.map((item) => (
+          <React.Fragment key={item._id}>
+            <ListItem component={Link} to={`/users/${item._id}`}>
+              <ListItemText primary={`${item.first_name} ${item.last_name}`} />
+            </ListItem>
+            <Divider />
+          </React.Fragment>
+        ))}
+      </List>
+    </div>
+  );
 }
 
 export default UserList;

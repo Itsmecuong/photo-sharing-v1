@@ -7,10 +7,10 @@
  */
 function fetchModel(url, options = {}) {
   const API_BASE_URL = "http://localhost:8081";
-  
+
   // Lấy token từ localStorage
   const token = localStorage.getItem("token");
-  
+
   const fetchOptions = {
     method: options.method || "GET",
     headers: {
@@ -23,7 +23,7 @@ function fetchModel(url, options = {}) {
   if (options.body) {
     fetchOptions.body = options.body;
   }
-  
+
   return fetch(API_BASE_URL + url, fetchOptions)
     .then(async (response) => {
       if (!response.ok) {
@@ -31,9 +31,10 @@ function fetchModel(url, options = {}) {
         if (response.status === 401 || response.status === 403) {
           console.error("Unauthorized or Token expired");
           localStorage.removeItem("token");
-          // Xoá token nếu không hợp lệ
+          localStorage.removeItem("user"); // Clear user state too
+          window.location.href = "/login-register"; // Redirect to login
         }
-        
+
         // Cố gắng parse error message từ backend nếu có
         let errorMessage = `HTTP error! status: ${response.status}`;
         try {

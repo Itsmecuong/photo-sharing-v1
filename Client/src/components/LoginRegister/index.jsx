@@ -27,7 +27,7 @@ function LoginRegister(props) {
 
   const handleLogin = async () => {
     try {
-      const data = await fetchModel("/admin/login", {
+      const data = await fetchModel("/api/users/login", {
         method: "POST",
         body: JSON.stringify({ login_name: loginUsername, password: loginPassword }),
       });
